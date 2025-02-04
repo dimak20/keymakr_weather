@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from weather_app.serializers import CityListSerializer
+from weather_app.tasks import fetch_weather_data
 
 
 class WeatherView(APIView):
@@ -22,6 +23,6 @@ class WeatherView(APIView):
 
         cities = serializer.validated_data["cities"]
         task_id = str(uuid.uuid4())
-        fetch_weather_data.apply_async(args=[cities, task_id])
+        fetch_weather_data().apply_async(args=[cities, task_id])
 
         return Response({"task_id": task_id}, status=status.HTTP_202_ACCEPTED)
