@@ -29,12 +29,12 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
 
     self.update_state(
         state="running",
-        meta={"status": "running", "task_id": task_id, "progress": f"0 / {total_cities}"}
+        meta={"status": "running", "task_id": task_id, "processed_cities": 0, "progress": f"0 / {total_cities}"}
     )
 
     async with httpx.AsyncClient() as client:
         tasks = [
-            fetch_city_weather(client, provider, city)
+            fetch_city_weather(self, client, provider, city, total_cities)
             for city in cities
         ]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
@@ -52,11 +52,6 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
 
         results[region].append(city_params)
 
-        self.update_state(
-            state="running",
-            meta={"status": "running", "task_id": task_id, "progress": f"{index} / {total_cities}"}
-        )
-
     for region, region_data in results.items():
         dir_path = os.path.join(settings.WEATHER_DATA_DIR, region)
         os.makedirs(dir_path, exist_ok=True)
@@ -71,8 +66,15 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
     return {"status": "completed", "results": results, "files": file_paths}
 
 
-async def fetch_city_weather(client, provider, city: str) -> dict:
-    city_normalized = await normalize_city(city)
+async def fetch_city_weather(self, client, provider, city: str, total_cities) -> dict:
+    city_normalized = normalize_city(city)
+    task_result = self.AsyncResult(self.request.id)
+    current_processed_cities = task_result.info.get("processed_cities", 0)
+    self.update_state(
+        state="running",
+        meta={"status": "running", "task_id": self.request.id, "processed_cities": current_processed_cities + 1,
+              "progress": f"{current_processed_cities + 1} / {total_cities}"}
+    )
 
     if not city_normalized:
         raise ValueError(f"Cannot normalize city: {city}")

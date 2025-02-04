@@ -1,17 +1,16 @@
 from urllib.parse import urljoin
 
 from django.conf import settings
-from geopy.adapters import AioHTTPAdapter
 from geopy.geocoders import Nominatim
 
 from weather_app.validators import WeatherValidator
 
-geolocator = Nominatim(user_agent="geo_normalizer", adapter_factory=AioHTTPAdapter)
+geolocator = Nominatim(user_agent="geo_normalizer")
 weather_validator = WeatherValidator()
 
 
-async def normalize_city(city: str) -> str:
-    location = await geolocator.geocode(city, language="en", timeout=20)
+def normalize_city(city: str) -> str:
+    location = geolocator.geocode(city, language="en", timeout=10)
     return location.address.split(",")[0] if location else None
 
 
