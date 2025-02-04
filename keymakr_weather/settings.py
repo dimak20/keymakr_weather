@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,7 +43,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "django_celery_beat",
-    #my apps
+    # my apps
     "management_utils",
     "weather_app"
 ]
@@ -154,3 +157,6 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 CELERY_TIMEZONE = "Europe/Kiev"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+WEATHER_URL = os.environ.get("WEATHER_URL")
+WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
