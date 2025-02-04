@@ -13,6 +13,7 @@ services:
             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./:/app
+      - ./weather_data:/weather_data
     depends_on:
       - db
       - redis
@@ -55,6 +56,8 @@ services:
       - .env
     command: >
       sh -c "celery -A keymakr_weather worker --loglevel=info"
+    volumes:
+      - ./weather_data:/weather_data
     depends_on:
       - db
       - redis
@@ -64,7 +67,6 @@ services:
   celery-beat:
     build:
       context: .
-    user: my_user
     command: >
       sh -c "celery -A keymakr_weather beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
     env_file:
@@ -99,6 +101,7 @@ services:
 
 volumes:
   my_db:
+  weather_data:
 
 networks:
   weather:
