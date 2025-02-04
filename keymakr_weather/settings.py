@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "django_celery_beat",
+    #my apps
+    "management_utils"
 ]
 
 MIDDLEWARE = [
