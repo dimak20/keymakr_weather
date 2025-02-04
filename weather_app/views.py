@@ -1,5 +1,6 @@
 import uuid
 
+from celery.result import AsyncResult
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
@@ -25,7 +26,19 @@ class WeatherView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         cities = serializer.validated_data["cities"]
-        task_id = str(uuid.uuid4())
-        fetch_weather_data.apply_async(args=[cities, task_id])
+        task = fetch_weather_data.apply_async(args=[cities])
 
-        return Response({"task_id": task_id}, status=status.HTTP_202_ACCEPTED)
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+
+class TaskStatusView(APIView):
+    def get(self, request, task_id: str):
+        result = AsyncResult(task_id)
+        meta = result.info
+
+        if isinstance(meta, Exception):
+            meta = {"error": str(meta)}
+
+        return Response(
+                status=status.HTTP_200_OK,
+                data=meta
+            )
