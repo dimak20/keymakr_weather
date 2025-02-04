@@ -133,13 +133,21 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+
+WEATHER_URL = os.environ.get("WEATHER_URL")
+WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
+WEATHER_DATA_DIR = os.environ.get("WEATHER_DATA_DIR")
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, WEATHER_DATA_DIR)
+MEDIA_HOST = os.environ.get("MEDIA_HOST", "http://localhost:8000")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -159,10 +167,6 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 CELERY_TIMEZONE = "Europe/Kiev"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-WEATHER_URL = os.environ.get("WEATHER_URL")
-WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
-WEATHER_DATA_DIR = os.environ.get("WEATHER_DATA_DIR")
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

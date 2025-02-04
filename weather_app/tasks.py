@@ -7,7 +7,7 @@ from celery import shared_task
 from django.conf import settings
 
 from weather_app.factories import WeatherProviderFactory
-from weather_app.utils import normalize_city, validate_weather_response
+from weather_app.utils import normalize_city, validate_weather_response, generate_json_link
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,7 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
         with open(file_path, "w") as f:
             json.dump(region_data, f, indent=4)
 
-        file_paths.append(file_path)
+        json_link = generate_json_link(file_path)
+        file_paths.append(json_link)
 
-    return {"status": "completed", "results": list(results.items())}
+    return {"status": "completed", "results": list(results.items()), "files": file_paths}
