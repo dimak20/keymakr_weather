@@ -10,7 +10,7 @@ class WeatherAPIProvider(WeatherProvider):
     def get_temperature(self, data: dict) -> float:
         return data["current"]["temp_c"]
 
-    def get_condition(self, data: dict) -> str:
+    def get_description(self, data: dict) -> str:
         return data["current"]["condition"]["text"]
 
     def build_request_params(self, city: str) -> dict:
@@ -22,6 +22,6 @@ class WeatherAPIProvider(WeatherProvider):
     def get_city_response(self, data: dict) -> dict:
         return {
             "region": self.get_region(data),
-            "condition": self.get_condition(data),
+            "description": self.get_condition(data),
             "temperature": self.get_temperature(data)
         }

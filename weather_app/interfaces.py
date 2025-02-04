@@ -10,7 +10,7 @@ class WeatherProvider(ABC):
         pass
 
     @abstractmethod
-    def get_condition(self, data: dict) -> str:
+    def get_description(self, data: dict) -> str:
         pass
 
     @abstractmethod
