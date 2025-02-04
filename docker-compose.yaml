@@ -61,6 +61,37 @@ services:
     networks:
       - weather
 
+  celery-beat:
+    build:
+      context: .
+    user: my_user
+    command: >
+      sh -c "celery -A keymakr_weather beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - db
+    restart: on-failure
+    networks:
+      - weather
+
+  flower:
+    image: mher/flower
+    ports:
+      - "5555:5555"
+    command: >
+      flower --broker=redis://redis:6379/0 --port=5555
+    depends_on:
+      - redis
+      - celery
+      - celery-beat
+    env_file:
+      - .env
+    networks:
+      - weather
 
 volumes:
   my_db:
