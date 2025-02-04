@@ -36,7 +36,10 @@ class TaskStatusView(APIView):
         meta = result.info
 
         if isinstance(meta, Exception):
-            meta = {"error": str(meta)}
+            meta = {
+                "status": "failed",
+                "errors": str(meta)
+            }
 
         return Response(
                 status=status.HTTP_200_OK,
