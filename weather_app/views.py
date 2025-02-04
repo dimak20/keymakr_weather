@@ -1,6 +1,7 @@
 import uuid
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +13,9 @@ from weather_app.tasks import fetch_weather_data
 class WeatherView(APIView):
     @extend_schema(
         request=CityListSerializer,
-        responses={202: {"task_id": str}},
+        responses={
+            202: "Task ID"
+        },
         description="Fetch a list of cities and returns task_id to check task status "
     )
     def post(self, request):
@@ -23,6 +26,6 @@ class WeatherView(APIView):
 
         cities = serializer.validated_data["cities"]
         task_id = str(uuid.uuid4())
-        fetch_weather_data().apply_async(args=[cities, task_id])
+        fetch_weather_data.apply_async(args=[cities, task_id])
 
         return Response({"task_id": task_id}, status=status.HTTP_202_ACCEPTED)
