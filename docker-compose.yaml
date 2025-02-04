@@ -37,8 +37,6 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
-    networks:
-      - library
     env_file:
       - .env
     healthcheck:
@@ -47,6 +45,8 @@ services:
       timeout: 60s
       retries: 5
     restart: always
+    networks:
+      - weather
 
   celery:
     build:
