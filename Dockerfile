@@ -9,14 +9,4 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 COPY . /app
-RUN mkdir -p /weather_cities
-
-RUN adduser \
-    --disabled-password \
-    --no-create-home \
-    my_user
-
-RUN chown -R my_user /weather_cities
-RUN chmod -R 755 /weather_cities
-
-USER my_user
+RUN mkdir -p /weather_data
