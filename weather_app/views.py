@@ -1,8 +1,5 @@
-import uuid
-
 from celery.result import AsyncResult
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,10 +27,17 @@ class WeatherView(APIView):
 
         return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
 
+
 class TaskStatusView(APIView):
     def get(self, request, task_id: str):
         result = AsyncResult(task_id)
         meta = result.info
+
+        if not result.info:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data=f"Task with id {task_id} does not exist"
+            )
 
         if isinstance(meta, Exception):
             meta = {
@@ -42,6 +46,6 @@ class TaskStatusView(APIView):
             }
 
         return Response(
-                status=status.HTTP_200_OK,
-                data=meta
-            )
+            status=status.HTTP_200_OK,
+            data=meta
+        )
