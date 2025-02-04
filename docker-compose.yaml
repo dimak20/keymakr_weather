@@ -1,0 +1,70 @@
+services:
+  weather_service:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py wait_for_db &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - weather
+
+
+  db:
+    image: postgres:16.0-alpine3.17
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - my_db:$PGDATA
+    networks:
+      - weather
+
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - library
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+    restart: always
+
+  celery:
+    build:
+      context: .
+    env_file:
+      - .env
+    command: >
+      sh -c "celery -A keymakr_weather worker --loglevel=info"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - weather
+
+
+volumes:
+  my_db:
+
+networks:
+  weather:
+    driver: bridge
