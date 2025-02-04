@@ -1,5 +1,6 @@
+import json
 import logging
-from time import sleep
+import os.path
 
 import requests
 from celery import shared_task
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True)
 def fetch_weather_data(self, cities: list[str]) -> dict | None:
     results = {}
+    file_paths = []
     total_cities = len(cities)
     task_id = self.request.id
     provider = WeatherProviderFactory.create_provider()
@@ -27,7 +29,6 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
         }
     )
 
-    sleep(10)
     for index, city in enumerate(cities, start=1):
         city_normalized = normalize_city(city)
 
@@ -35,7 +36,6 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
             raise ValueError(f"Cannot normalize city: {city}")
 
         params = provider.build_request_params(city)
-        sleep(10)
         try:
             response = requests.get(
                 settings.WEATHER_URL,
@@ -44,13 +44,17 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
             )
             response.raise_for_status()
             data = response.json()
-            logger.info(data)
             city_params = provider.get_city_response(data=data)
+            city_params.update(
+                {
+                    "city": city_normalized
+                }
+            )
 
             if not validate_weather_response(data=city_params):
                 continue
 
-            region = city_params["region"]
+            region = city_params.pop("region", None)
 
             if region not in results:
                 results[region] = []
@@ -68,4 +72,16 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
             logger.warning(
                 f"Error fetching data from weather API: {city}: {e}"
             )
-    return {"status": "completed", "data": results}
+
+    for region, region_data in results.items():
+        dir_path = os.path.join(settings.WEATHER_DATA_DIR, region)
+        os.makedirs(dir_path, exist_ok=True)
+
+        file_path = os.path.join(dir_path, f"task_{task_id}.json")
+
+        with open(file_path, "w") as f:
+            json.dump(region_data, f, indent=4)
+
+        file_paths.append(file_path)
+
+    return {"status": "completed", "results": list(results.items())}
