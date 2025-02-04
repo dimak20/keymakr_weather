@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "django_filters",
     "django_celery_beat",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     # my apps
     "management_utils",
     "weather_app"
