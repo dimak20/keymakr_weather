@@ -44,12 +44,8 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
             )
             response.raise_for_status()
             data = response.json()
-            city_params = provider.get_city_response(data=data)
-            city_params.update(
-                {
-                    "city": city_normalized
-                }
-            )
+            city_params = {"city": city_normalized}
+            city_params.update(provider.get_city_response(data=data))
 
             if not validate_weather_response(data=city_params):
                 continue

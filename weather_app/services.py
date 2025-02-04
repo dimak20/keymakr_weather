@@ -22,6 +22,6 @@ class WeatherAPIProvider(WeatherProvider):
     def get_city_response(self, data: dict) -> dict:
         return {
             "region": self.get_region(data),
-            "description": self.get_condition(data),
-            "temperature": self.get_temperature(data)
+            "temperature": self.get_temperature(data),
+            "description": self.get_description(data)
         }
