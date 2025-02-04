@@ -52,7 +52,7 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
 
             region = city_params.pop("region", None)
 
-            if region not in results:
+            if region and region not in results:
                 results[region] = []
 
             results[region].append(city_params)
@@ -81,4 +81,10 @@ def fetch_weather_data(self, cities: list[str]) -> dict | None:
         json_link = generate_json_link(file_path)
         file_paths.append(json_link)
 
-    return {"status": "completed", "results": list(results.items()), "files": file_paths}
+    return {
+        "status": "completed",
+        "results": {
+            region: data for region, data in results.items()
+        },
+        "files": file_paths
+    }
