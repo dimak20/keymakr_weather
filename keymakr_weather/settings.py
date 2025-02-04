@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     "django_filters",
     "django_celery_beat",
     #my apps
-    "management_utils"
+    "management_utils",
+    "weather_app"
 ]
 
 MIDDLEWARE = [
