@@ -1,0 +1,49 @@
+from abc import ABC, abstractmethod
+
+from django.conf import settings
+
+
+class WeatherProvider(ABC):
+    @abstractmethod
+    def get_region(self, data: dict) -> str:
+        pass
+
+    @abstractmethod
+    def get_temperature(self, data: dict) -> str:
+        pass
+
+    @abstractmethod
+    def get_condition(self, data: dict) -> str:
+        pass
+
+    @abstractmethod
+    def build_request_params(self, city: str) -> dict:
+        pass
+
+    @abstractmethod
+    def get_city_response(self, data: dict) -> dict:
+        pass
+
+
+class WeatherAPIProvider(WeatherProvider):
+    def get_region(self, data: dict) -> str:
+        return data["location"]["tz_id"].split("/")[0]
+
+    def get_temperature(self, data: dict) -> float:
+        return data["current"]["temp_c"]
+
+    def get_condition(self, data: dict) -> str:
+        return data["current"]["condition"]["text"]
+
+    def build_request_params(self, city: str) -> dict:
+        return {
+            "q": city,
+            "key": settings.WEATHER_API_KEY
+        }
+
+    def get_city_response(self, data: dict) -> dict:
+        return {
+            "region": self.get_region(data),
+            "condition": self.get_condition(data),
+            "temperature": self.get_temperature(data)
+        }
