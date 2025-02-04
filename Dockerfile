@@ -9,6 +9,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 COPY . /app
+RUN mkdir -p /weather_cities
 
 RUN adduser \
     --disabled-password \
