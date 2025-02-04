@@ -15,4 +15,7 @@ RUN adduser \
     --no-create-home \
     my_user
 
+RUN chown -R my_user /weather_cities
+RUN chmod -R 755 /weather_cities
+
 USER my_user
