@@ -162,6 +162,7 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 WEATHER_URL = os.environ.get("WEATHER_URL")
 WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY")
+WEATHER_DATA_DIR = os.environ.get("WEATHER_DATA_DIR")
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
