@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from weather_app.serializers import CityListSerializer, RegionCityListSerializer
-from weather_app.tasks import fetch_weather_data
+from weather_app.tasks import fetch_weather_data, logger, fetch_region_data
 
 
 class WeatherView(APIView):
@@ -65,6 +65,15 @@ class RegionCitiesView(APIView):
         description="Fetch a list of cities from selected region"
     )
     def get(self, request, region: str):
-        task = fetch_weather_data.apply_async(args=[region])
+        task = fetch_region_data.apply_async(args=[region])
+        result = task.get(propagate=False)
 
-        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+        if isinstance(result, Exception):
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    "errors": str(result)
+                }
+            )
+
+        return Response({"result": result}, status=status.HTTP_200_OK)

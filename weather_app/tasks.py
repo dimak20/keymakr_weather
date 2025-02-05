@@ -19,12 +19,8 @@ logger = logging.getLogger(__name__)
 def fetch_weather_data(self, cities: list[str]) -> dict | None:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(fetch_data(self, cities))
-    except NotNormalizedException as e:
-        logger.error(f"Task {self.request.id} failed due to city normalization error: {e}")
-        self.update_state(state="failed", meta={"status": "failed", "errors": str(e)})
-        raise Ignore()
+
+    return loop.run_until_complete(fetch_data(self, cities))
 
 
 async def fetch_data(self, cities: list[str]) -> dict | None:
@@ -46,9 +42,19 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
         ]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
+    errors = []
     for index, (city, result) in enumerate(zip(cities, responses), start=1):
+        if isinstance(result, NotNormalizedException):
+            logger.error(f"Task {task_id} failed due to city normalization error: {result}")
+            self.update_state(
+                state="failed",
+                meta={"status": "failed", "errors": f"City normalization failed: {city}"}
+            )
+            raise Ignore()
+
         if isinstance(result, Exception):
             logger.warning(f"Error fetching data for {city}: {result}")
+            errors.append(f"{city}: {str(result)}")
             continue
 
         city_params = result
@@ -58,6 +64,14 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
             results[region] = []
 
         results[region].append(city_params)
+
+    if not results:
+        error_message = "No valid weather data retrieved for any city"
+        self.update_state(
+            state="FAILED",
+            meta={"status": "failed", "errors": errors or error_message}
+        )
+        raise Ignore()
 
     for region, region_data in results.items():
         dir_path = os.path.join(settings.WEATHER_DATA_DIR, region)
@@ -110,9 +124,34 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
     except httpx.RequestError as e:
         raise logger.warning(f"Error fetching weather for {city}: {e}")
 
+
 @shared_task(bind=True)
-def fetch_region_data(self, region: str) -> list[dict] | None:
-    self.update_state(
-        state="running"
-    )
+def fetch_region_data(self, region: str) -> dict | None:
     region = region.capitalize()
+
+    region_path = os.path.join(settings.WEATHER_DATA_DIR, region)
+    if not os.path.exists(region_path):
+        error_msg = f"Unknown region: {region}"
+        logger.error(error_msg)
+        raise Exception(error_msg)
+
+    files = [
+        (file.path, os.stat(file).st_mtime)
+        for file in os.scandir(region_path) if file.is_file()
+    ]
+    files = sorted(files, key=lambda x: x[1], reverse=True)
+    result = {}
+
+    for file, timestamp in files:
+        try:
+            with open(file, "r") as f:
+                json_file = json.load(f)
+                for city in json_file:
+                    city_name = city.pop("city", None)
+
+                    if city_name and city_name not in result:
+                        result[city_name] = city
+        except Exception as e:
+            logger.warning(f"Error during processing file {file}: {e}")
+
+    return result
