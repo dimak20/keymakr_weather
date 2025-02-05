@@ -76,4 +76,4 @@ class RegionCitiesView(APIView):
                 }
             )
 
-        return Response({"result": result}, status=status.HTTP_200_OK)
+        return Response({"results": result}, status=status.HTTP_200_OK)
