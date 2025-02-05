@@ -10,3 +10,4 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 RUN mkdir -p /weather_data
+RUN mkdir -p /logs && chmod -R 777 /logs
