@@ -5,8 +5,10 @@ import os.path
 
 import httpx
 from celery import shared_task
+from celery.exceptions import Ignore
 from django.conf import settings
 
+from weather_app.exceptions import NotNormalizedException
 from weather_app.factories import WeatherProviderFactory
 from weather_app.utils import normalize_city, validate_weather_response, generate_json_link
 
@@ -17,7 +19,12 @@ logger = logging.getLogger(__name__)
 def fetch_weather_data(self, cities: list[str]) -> dict | None:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    return loop.run_until_complete(fetch_data(self, cities))
+    try:
+        return loop.run_until_complete(fetch_data(self, cities))
+    except NotNormalizedException as e:
+        logger.error(f"Task {self.request.id} failed due to city normalization error: {e}")
+        self.update_state(state="failed", meta={"status": "failed", "errors": str(e)})
+        raise Ignore()
 
 
 async def fetch_data(self, cities: list[str]) -> dict | None:
@@ -37,7 +44,7 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
             fetch_city_weather(self, client, provider, city, total_cities)
             for city in cities
         ]
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        responses = await asyncio.gather(*tasks, return_exceptions=False)
 
     for index, (city, result) in enumerate(zip(cities, responses), start=1):
         if isinstance(result, Exception):
@@ -70,14 +77,15 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
     city_normalized = normalize_city(city)
     task_result = self.AsyncResult(self.request.id)
     current_processed_cities = task_result.info.get("processed_cities", 0)
+
+    if not city_normalized:
+        raise NotNormalizedException(f"Cannot normalize city {city}")
+
     self.update_state(
         state="running",
         meta={"status": "running", "task_id": self.request.id, "processed_cities": current_processed_cities + 1,
               "progress": round(((current_processed_cities + 1) / total_cities * 100), 2)}
     )
-
-    if not city_normalized:
-        raise ValueError(f"Cannot normalize city: {city}")
 
     params = provider.build_request_params(city)
 
@@ -90,9 +98,9 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
         city_params.update(provider.get_city_response(data=data))
 
         if not validate_weather_response(data=city_params):
-            raise ValueError(f"Invalid weather data for {city}")
+            logger.warning(f"Invalid weather data for {city}")
 
         return city_params
 
     except httpx.RequestError as e:
-        raise RuntimeError(f"Error fetching weather for {city}: {e}")
+        raise logger.warning(f"Error fetching weather for {city}: {e}")
