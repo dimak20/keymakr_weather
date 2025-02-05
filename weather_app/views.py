@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from weather_app.serializers import CityListSerializer, RegionCityListSerializer
-from weather_app.tasks import fetch_weather_data, logger, fetch_region_data
+from weather_app.tasks import fetch_weather_data, fetch_region_data
 
 
 class WeatherView(APIView):

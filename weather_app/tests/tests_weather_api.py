@@ -23,7 +23,11 @@ class WeatherTests(TestCase):
             "cities": [city]
         }
 
-        response = self.client.post(WEATHER_BASE_URL, data=payload)
+        response = self.client.post(
+            WEATHER_BASE_URL,
+            data=payload,
+            content_type="application/json"
+        )
 
         self.assertEqual(
             response.status_code, status.HTTP_202_ACCEPTED
@@ -37,12 +41,19 @@ class WeatherTests(TestCase):
         )
 
     def test_correct_response_with_list_of_cities(self):
-        cities = [generate_city() for i in range(5)]
+        city_1 = generate_city()
+        city_2 = generate_city()
         payload = {
-            "cities": cities
+            "cities": [
+                city_1, city_2
+            ]
         }
 
-        response = self.client.post(WEATHER_BASE_URL, data=payload)
+        response = self.client.post(
+            WEATHER_BASE_URL,
+            data=payload,
+            content_type="application/json"
+        )
 
         self.assertEqual(
             response.status_code, status.HTTP_202_ACCEPTED
@@ -63,7 +74,8 @@ class WeatherTests(TestCase):
 
         response = self.client.post(
             WEATHER_BASE_URL,
-            data=payload
+            data=payload,
+            content_type="application/json"
         )
 
         self.assertEqual(
