@@ -66,14 +66,14 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
     return {"status": "completed", "results": results, "files": file_paths}
 
 
-async def fetch_city_weather(self, client, provider, city: str, total_cities) -> dict:
+async def fetch_city_weather(self, client, provider, city: str, total_cities: int) -> dict:
     city_normalized = normalize_city(city)
     task_result = self.AsyncResult(self.request.id)
     current_processed_cities = task_result.info.get("processed_cities", 0)
     self.update_state(
         state="running",
         meta={"status": "running", "task_id": self.request.id, "processed_cities": current_processed_cities + 1,
-              "progress": f"{current_processed_cities + 1} / {total_cities}"}
+              "progress": round(((current_processed_cities + 1) / total_cities * 100), 2)}
     )
 
     if not city_normalized:
