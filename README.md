@@ -17,7 +17,7 @@ Normalizes and corrects city names (e.g., handles typos and different languages)
 Filters out invalid data (e.g., incorrect temperature values).
 Saves results into region-based JSON files for further analysis.
 
-## Run with Docker ()
+## Run with Docker
 
 1. Clone repository  
 ```shell
@@ -111,19 +111,6 @@ Project
 |   |  └── ...
 |   ├── Asia
 │   └── ...
-|
-|
-├── payments
-│   ├── __init__.py
-│   └── admin.py
-│   ├── apps.py
-|   ├── exceptions.py
-|   ├── serializers.py
-│   ├── models.py
-|   ├── services.py
-|   ├── tests.py
-|   ├── urls.py
-│   └── views.py
 |   
 ├── logs
 │   
@@ -155,6 +142,11 @@ Project
 | `/tasks/<task_id>`      | GET        | Fetches the status of the task (running, completed, failed) based on the task ID.                         |
 | `/results/<region>`     | GET        | Returns the weather data for cities within the specified region (e.g., Europe, Asia).                     |
 
+# Important Notes
+
+Due to the high number of I/O-bound operations, the endpoint that handles regions can also be implemented as a background Celery task with statuses. It won't return instantly.
+
+The geopy library, which normalizes data, makes requests at a rate of 1 request per second in its free tier. If you use a paid API key or other libraries that allow making requests more frequently (e.g., more than once per second), and make the function a coroutine, you can achieve fully asynchronous requests and significantly improve the performance of Celery tasks. The current implementation is left as-is for demonstration purposes of Celery task states (status - running and progress).
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
