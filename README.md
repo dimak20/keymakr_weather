@@ -26,6 +26,7 @@ cd keymakr_weather
 ```
 2. Create .env file and set up environment variables
 ```shell
+DJANGO_SECRET_KEY=<your-secret-key>
 REDIS_URL=<redis://redis:6379/1>
 CELERY_BROKER_URL=<redis://redis:6379/0>
 CELERY_RESULT_BACKEND=<redis://redis:6379/1>
