@@ -88,7 +88,7 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
 
 
 async def fetch_city_weather(self, client, provider, city: str, total_cities: int) -> dict:
-    city_normalized = normalize_city(city)
+    city_normalized = normalize_city(city) #or await normalize_city(city) for async opportunity
     task_result = self.AsyncResult(self.request.id)
     current_processed_cities = task_result.info.get("processed_cities", 0)
 

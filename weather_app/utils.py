@@ -21,3 +21,12 @@ def validate_weather_response(data: dict) -> bool:
 def generate_json_link(file_path: str) -> str:
     file_path = file_path.replace(settings.WEATHER_DATA_DIR, "")
     return urljoin(settings.MEDIA_HOST, f"{settings.MEDIA_URL}{file_path.lstrip('/')}")
+
+# from geopy.adapters import AioHTTPAdapter
+# async def normalize_city(city: str) -> str:
+#     async with Nominatim(
+#         user_agent="geo_normalizer",
+#         adapter_factory=AioHTTPAdapter,
+#     ) as geolocator:
+#         location = await geolocator.geocode(city, language="en", timeout=10)
+#         return location.address.split(",")[0] if location else None
