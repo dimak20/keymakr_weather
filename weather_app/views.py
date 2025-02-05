@@ -1,10 +1,10 @@
 from celery.result import AsyncResult
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from weather_app.serializers import CityListSerializer
+from weather_app.serializers import CityListSerializer, RegionCityListSerializer
 from weather_app.tasks import fetch_weather_data
 
 
@@ -49,3 +49,22 @@ class TaskStatusView(APIView):
             status=status.HTTP_200_OK,
             data=meta
         )
+
+
+class RegionCitiesView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="region",
+                type=str,
+                location=OpenApiParameter.PATH,
+                description="Region name (e.g., 'Europe', 'Asia', 'America')",
+            )
+        ],
+        responses={200: RegionCityListSerializer},
+        description="Fetch a list of cities from selected region"
+    )
+    def get(self, request, region: str):
+        task = fetch_weather_data.apply_async(args=[region])
+
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)

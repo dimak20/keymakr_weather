@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from weather_app.interfaces import WeatherProvider
+from weather_app.base import WeatherProvider
 
 
 class WeatherAPIProvider(WeatherProvider):

@@ -44,7 +44,7 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
             fetch_city_weather(self, client, provider, city, total_cities)
             for city in cities
         ]
-        responses = await asyncio.gather(*tasks, return_exceptions=False)
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
 
     for index, (city, result) in enumerate(zip(cities, responses), start=1):
         if isinstance(result, Exception):
@@ -81,10 +81,15 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
     if not city_normalized:
         raise NotNormalizedException(f"Cannot normalize city {city}")
 
+    progress = round(((current_processed_cities + 1) / total_cities * 100), 2)
     self.update_state(
         state="running",
-        meta={"status": "running", "task_id": self.request.id, "processed_cities": current_processed_cities + 1,
-              "progress": round(((current_processed_cities + 1) / total_cities * 100), 2)}
+        meta={
+            "status": "running",
+            "task_id": self.request.id,
+            "processed_cities": current_processed_cities + 1,
+            "progress": f"{progress}%"
+        }
     )
 
     params = provider.build_request_params(city)
@@ -104,3 +109,10 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
 
     except httpx.RequestError as e:
         raise logger.warning(f"Error fetching weather for {city}: {e}")
+
+@shared_task(bind=True)
+def fetch_region_data(self, region: str) -> list[dict] | None:
+    self.update_state(
+        state="running"
+    )
+    region = region.capitalize()

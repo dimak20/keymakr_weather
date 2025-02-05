@@ -1,4 +1,5 @@
-from weather_app.interfaces import DataValidator
+from weather_app.base import DataValidator
+
 
 class TemperatureValidator(DataValidator):
     def validate(self, data: dict) -> bool:

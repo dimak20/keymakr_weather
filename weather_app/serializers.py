@@ -14,3 +14,8 @@ class CityListSerializer(serializers.Serializer):
             if not city.replace(" ", "").isalpha():
                 raise ValidationError(f"Invalid city: {city}")
         return cities
+
+class RegionCityListSerializer(serializers.Serializer):
+    cities = serializers.ListSerializer(
+        child=serializers.DictField()
+    )
