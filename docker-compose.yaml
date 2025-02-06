@@ -1,0 +1,111 @@
+services:
+  weather_service:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py wait_for_db &&
+            python manage.py makemigrations &&
+            python manage.py migrate &&
+            uvicorn keymakr_weather.asgi:application --host 0.0.0.0 --port 8000 --loop asyncio"
+    volumes:
+      - ./:/app
+      - ./weather_data:/weather_data
+      - ./logs:/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - weather
+
+
+  db:
+    image: postgres:16.0-alpine3.17
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - my_db:$PGDATA
+    networks:
+      - weather
+
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+    restart: always
+    networks:
+      - weather
+
+  celery:
+    build:
+      context: .
+    env_file:
+      - .env
+    command: >
+      sh -c "celery -A keymakr_weather worker --loglevel=info --pool=threads"
+    volumes:
+      - ./weather_data:/weather_data
+      - ./logs:/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - weather
+
+  celery-beat:
+    build:
+      context: .
+    command: >
+      sh -c "celery -A keymakr_weather beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - db
+    restart: on-failure
+    networks:
+      - weather
+
+  flower:
+    image: mher/flower
+    ports:
+      - "5555:5555"
+    command: >
+      celery --broker=redis://redis:6379/0 flower --port=5555
+    depends_on:
+      redis:
+        condition: service_started
+      celery:
+        condition: service_started
+      celery-beat:
+        condition: service_started
+    env_file:
+      - .env
+    networks:
+      - weather
+
+
+volumes:
+  my_db:
+  weather_data:
+  logs:
+
+networks:
+  weather:
+    driver: bridge
