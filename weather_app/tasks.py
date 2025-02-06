@@ -106,10 +106,10 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
         }
     )
 
-    params = provider.build_request_params(city)
+    request_url = provider.build_request_url(city)
 
     try:
-        response = await client.get(settings.WEATHER_URL, params=params, timeout=5)
+        response = await client.get(request_url, timeout=5)
         response.raise_for_status()
         data = response.json()
 
