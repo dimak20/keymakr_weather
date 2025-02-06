@@ -14,7 +14,7 @@ class WeatherProvider(ABC):
         pass
 
     @abstractmethod
-    def build_request_params(self, city: str) -> dict:
+    def build_request_url(self, city: str) -> str:
         pass
 
     @abstractmethod
