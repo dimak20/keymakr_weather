@@ -88,7 +88,7 @@ async def fetch_data(self, cities: list[str]) -> dict | None:
 
 
 async def fetch_city_weather(self, client, provider, city: str, total_cities: int) -> dict:
-    city_normalized = normalize_city(city) #or await normalize_city(city) for async opportunity
+    city_normalized = normalize_city(city)  # or await normalize_city(city) for async opportunity
     task_result = self.AsyncResult(self.request.id)
     current_processed_cities = task_result.info.get("processed_cities", 0)
 
@@ -117,7 +117,7 @@ async def fetch_city_weather(self, client, provider, city: str, total_cities: in
         city_params.update(provider.get_city_response(data=data))
 
         if not validate_weather_response(data=city_params):
-            logger.warning(f"Invalid weather data for {city}")
+            raise ValueError(f"Invalid weather data for {city}")
 
         return city_params
 
